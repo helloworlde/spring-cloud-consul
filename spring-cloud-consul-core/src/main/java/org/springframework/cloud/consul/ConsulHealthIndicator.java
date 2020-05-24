@@ -16,16 +16,15 @@
 
 package org.springframework.cloud.consul;
 
-import java.util.List;
-import java.util.Map;
-
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.catalog.CatalogServicesRequest;
-
 import org.springframework.boot.actuate.health.AbstractHealthIndicator;
 import org.springframework.boot.actuate.health.Health;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Spencer Gibb
@@ -42,10 +41,11 @@ public class ConsulHealthIndicator extends AbstractHealthIndicator {
 	protected void doHealthCheck(Health.Builder builder) throws Exception {
 		final Response<String> leaderStatus = this.consul.getStatusLeader();
 		final Response<Map<String, List<String>>> services = this.consul
-				.getCatalogServices(CatalogServicesRequest.newBuilder()
-						.setQueryParams(QueryParams.DEFAULT).build());
-		builder.up().withDetail("leader", leaderStatus.getValue()).withDetail("services",
-				services.getValue());
+			.getCatalogServices(CatalogServicesRequest.newBuilder()
+			                                          .setQueryParams(QueryParams.DEFAULT).build());
+		builder.up()
+		       .withDetail("leader", leaderStatus.getValue())
+		       .withDetail("services", services.getValue());
 	}
 
 }

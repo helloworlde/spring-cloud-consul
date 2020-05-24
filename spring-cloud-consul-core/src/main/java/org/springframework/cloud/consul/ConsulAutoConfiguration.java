@@ -19,7 +19,6 @@ package org.springframework.cloud.consul;
 import com.ecwid.consul.transport.TLSConfig;
 import com.ecwid.consul.v1.ConsulClient;
 import org.aspectj.lang.annotation.Aspect;
-
 import org.springframework.boot.actuate.autoconfigure.endpoint.condition.ConditionalOnAvailableEndpoint;
 import org.springframework.boot.actuate.autoconfigure.health.ConditionalOnEnabledHealthIndicator;
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
@@ -101,11 +100,11 @@ public class ConsulAutoConfiguration {
 		@Bean(name = "consulRetryInterceptor")
 		@ConditionalOnMissingBean(name = "consulRetryInterceptor")
 		public RetryOperationsInterceptor consulRetryInterceptor(
-				RetryProperties properties) {
+			RetryProperties properties) {
 			return RetryInterceptorBuilder.stateless()
-					.backOffOptions(properties.getInitialInterval(),
-							properties.getMultiplier(), properties.getMaxInterval())
-					.maxAttempts(properties.getMaxAttempts()).build();
+			                              .backOffOptions(properties.getInitialInterval(), properties.getMultiplier(), properties.getMaxInterval())
+			                              .maxAttempts(properties.getMaxAttempts())
+			                              .build();
 		}
 
 	}

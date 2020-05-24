@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.consul.discovery;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
@@ -28,10 +24,13 @@ import com.ecwid.consul.v1.health.HealthServicesRequest;
 import com.ecwid.consul.v1.health.model.HealthService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.cloud.client.DefaultServiceInstance;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static org.springframework.cloud.consul.discovery.ConsulServerUtils.findHost;
 import static org.springframework.cloud.consul.discovery.ConsulServerUtils.getMetadata;
@@ -50,7 +49,7 @@ public class ConsulDiscoveryClient implements DiscoveryClient {
 	private final ConsulDiscoveryProperties properties;
 
 	public ConsulDiscoveryClient(ConsulClient client,
-			ConsulDiscoveryProperties properties) {
+	                             ConsulDiscoveryProperties properties) {
 		this.client = client;
 		this.properties = properties;
 	}
@@ -60,14 +59,27 @@ public class ConsulDiscoveryClient implements DiscoveryClient {
 		return "Spring Cloud Consul Discovery Client";
 	}
 
+	/**
+	 * 根据服务id获取服务
+	 *
+	 * @param serviceId
+	 * @return
+	 */
 	@Override
 	public List<ServiceInstance> getInstances(final String serviceId) {
 		return getInstances(serviceId,
-				new QueryParams(this.properties.getConsistencyMode()));
+			new QueryParams(this.properties.getConsistencyMode()));
 	}
 
+	/**
+	 * 根据实例的 id，查询单个实例
+	 *
+	 * @param serviceId
+	 * @param queryParams
+	 * @return
+	 */
 	public List<ServiceInstance> getInstances(final String serviceId,
-			final QueryParams queryParams) {
+	                                          final QueryParams queryParams) {
 		List<ServiceInstance> instances = new ArrayList<>();
 
 		addInstancesToList(instances, serviceId, queryParams);
@@ -75,51 +87,76 @@ public class ConsulDiscoveryClient implements DiscoveryClient {
 		return instances;
 	}
 
+	/**
+	 * 根据 Service 信息，生成 service 的实例
+	 *
+	 * @param instances
+	 * @param serviceId
+	 * @param queryParams
+	 */
 	private void addInstancesToList(List<ServiceInstance> instances, String serviceId,
-			QueryParams queryParams) {
+	                                QueryParams queryParams) {
 
+		// 请求参数
 		HealthServicesRequest request = HealthServicesRequest.newBuilder()
-				.setTag(this.properties.getDefaultQueryTag())
-				.setPassing(this.properties.isQueryPassing()).setQueryParams(queryParams)
-				.setToken(this.properties.getAclToken()).build();
+		                                                     .setTag(this.properties.getDefaultQueryTag())
+		                                                     .setPassing(this.properties.isQueryPassing())
+		                                                     .setQueryParams(queryParams)
+		                                                     .setToken(this.properties.getAclToken()).build();
 		Response<List<HealthService>> services = this.client.getHealthServices(serviceId,
-				request);
+			request);
 
 		for (HealthService service : services.getValue()) {
 			String host = findHost(service);
 
-			Map<String, String> metadata = getMetadata(service,
-					this.properties.isTagsAsMetadata());
+			Map<String, String> metadata = getMetadata(service, this.properties.isTagsAsMetadata());
 			boolean secure = false;
 			if (metadata.containsKey("secure")) {
 				secure = Boolean.parseBoolean(metadata.get("secure"));
 			}
-			instances.add(new DefaultServiceInstance(service.getService().getId(),
-					serviceId, host, service.getService().getPort(), secure, metadata));
+			instances.add(
+				new DefaultServiceInstance(
+					service.getService().getId(),
+					serviceId,
+					host,
+					service.getService().getPort(),
+					secure,
+					metadata)
+			);
 		}
 	}
 
+	/**
+	 * 获取所有的实例列表
+	 *
+	 * @return
+	 */
 	public List<ServiceInstance> getAllInstances() {
 		List<ServiceInstance> instances = new ArrayList<>();
 
 		Response<Map<String, List<String>>> services = this.client
-				.getCatalogServices(CatalogServicesRequest.newBuilder()
-						.setQueryParams(QueryParams.DEFAULT).build());
+			.getCatalogServices(CatalogServicesRequest.newBuilder()
+			                                          .setQueryParams(QueryParams.DEFAULT)
+			                                          .build());
 		for (String serviceId : services.getValue().keySet()) {
 			addInstancesToList(instances, serviceId, QueryParams.DEFAULT);
 		}
 		return instances;
 	}
 
+	/**
+	 * 获取所有的服务名称列表
+	 *
+	 * @return
+	 */
 	@Override
 	public List<String> getServices() {
 		String aclToken = this.properties.getAclToken();
 
 		CatalogServicesRequest request = CatalogServicesRequest.newBuilder()
-				.setQueryParams(QueryParams.DEFAULT)
-				.setToken(this.properties.getAclToken()).build();
-		return new ArrayList<>(
-				this.client.getCatalogServices(request).getValue().keySet());
+		                                                       .setQueryParams(QueryParams.DEFAULT)
+		                                                       .setToken(this.properties.getAclToken()).build();
+		return new ArrayList<>(this.client.getCatalogServices(request).getValue().keySet());
 	}
 
 	@Override

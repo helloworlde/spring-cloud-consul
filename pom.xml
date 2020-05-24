@@ -74,21 +74,21 @@
 				<groupId>io.spring.javaformat</groupId>
 				<artifactId>spring-javaformat-maven-plugin</artifactId>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-			</plugin>
+<!--			<plugin>-->
+<!--				<groupId>org.apache.maven.plugins</groupId>-->
+<!--				<artifactId>maven-checkstyle-plugin</artifactId>-->
+<!--			</plugin>-->
 		</plugins>
 	</build>
 
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-			</plugin>
-		</plugins>
-	</reporting>
+<!--	<reporting>-->
+<!--		<plugins>-->
+<!--			<plugin>-->
+<!--				<groupId>org.apache.maven.plugins</groupId>-->
+<!--				<artifactId>maven-checkstyle-plugin</artifactId>-->
+<!--			</plugin>-->
+<!--		</plugins>-->
+<!--	</reporting>-->
 
 	<dependencyManagement>
 		<dependencies>
@@ -191,6 +191,14 @@
 		<profile>
 			<id>spring</id>
 			<repositories>
+<!--                <repository>-->
+<!--                    <id>aliyun</id>-->
+<!--                    <name>aliyun</name>-->
+<!--                    <url>http://maven.aliyun.com/nexus/content/groups/public</url>-->
+<!--					<snapshots>-->
+<!--						<enabled>true</enabled>-->
+<!--					</snapshots>-->
+<!--                </repository>-->
 				<repository>
 					<id>spring-snapshots</id>
 					<name>Spring Snapshots</name>

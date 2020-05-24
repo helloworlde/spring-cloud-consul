@@ -16,6 +16,11 @@
 
 package org.springframework.cloud.consul.discovery;
 
+import com.ecwid.consul.v1.health.model.HealthService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.util.StringUtils;
+
 import java.net.Inet6Address;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -23,12 +28,6 @@ import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.ecwid.consul.v1.health.model.HealthService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.springframework.util.StringUtils;
 
 /**
  * @author Spencer Gibb
@@ -42,14 +41,19 @@ public final class ConsulServerUtils {
 		throw new IllegalStateException("Can't instantiate a utility class");
 	}
 
+	/**
+	 * 根据 service 的数据生成相应的 ip 地址
+	 * @param healthService
+	 * @return
+	 */
 	public static String findHost(HealthService healthService) {
 		HealthService.Service service = healthService.getService();
 		HealthService.Node node = healthService.getNode();
 
+		// service 地址优先，如果没有则使用 node 地址，如果都没有，则使用 node 名称
 		if (StringUtils.hasText(service.getAddress())) {
 			return fixIPv6Address(service.getAddress());
-		}
-		else if (StringUtils.hasText(node.getAddress())) {
+		} else if (StringUtils.hasText(node.getAddress())) {
 			return fixIPv6Address(node.getAddress());
 		}
 		return node.getNode();
@@ -62,8 +66,7 @@ public final class ConsulServerUtils {
 				return "[" + inetAdr.getHostName() + "]";
 			}
 			return address;
-		}
-		catch (UnknownHostException e) {
+		} catch (UnknownHostException e) {
 			log.debug("Not InetAddress: " + address + " , resolved as is.");
 			return address;
 		}
@@ -76,7 +79,7 @@ public final class ConsulServerUtils {
 
 	@Deprecated
 	public static Map<String, String> getMetadata(HealthService healthService,
-			boolean tagsAsMetadata) {
+	                                              boolean tagsAsMetadata) {
 		if (tagsAsMetadata) {
 			return getMetadata(healthService.getService().getTags());
 		}
@@ -90,18 +93,18 @@ public final class ConsulServerUtils {
 			for (String tag : tags) {
 				String[] parts = StringUtils.delimitedListToStringArray(tag, "=");
 				switch (parts.length) {
-				case 0:
-					break;
-				case 1:
-					metadata.put(parts[0], parts[0]);
-					break;
-				case 2:
-					metadata.put(parts[0], parts[1]);
-					break;
-				default:
-					String[] end = Arrays.copyOfRange(parts, 1, parts.length);
-					metadata.put(parts[0], StringUtils.arrayToDelimitedString(end, "="));
-					break;
+					case 0:
+						break;
+					case 1:
+						metadata.put(parts[0], parts[0]);
+						break;
+					case 2:
+						metadata.put(parts[0], parts[1]);
+						break;
+					default:
+						String[] end = Arrays.copyOfRange(parts, 1, parts.length);
+						metadata.put(parts[0], StringUtils.arrayToDelimitedString(end, "="));
+						break;
 				}
 
 			}

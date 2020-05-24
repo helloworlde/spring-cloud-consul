@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.consul;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
@@ -29,10 +25,13 @@ import com.ecwid.consul.v1.catalog.CatalogServiceRequest;
 import com.ecwid.consul.v1.catalog.CatalogServicesRequest;
 import com.ecwid.consul.v1.catalog.model.CatalogService;
 import com.ecwid.consul.v1.catalog.model.Node;
-
 import org.springframework.boot.actuate.endpoint.annotation.Endpoint;
 import org.springframework.boot.actuate.endpoint.annotation.ReadOperation;
 import org.springframework.core.style.ToStringCreator;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author Spencer Gibb
@@ -54,19 +53,19 @@ public class ConsulEndpoint {
 		data.setAgentServices(agentServices.getValue());
 
 		Response<Map<String, List<String>>> catalogServices = this.consul
-				.getCatalogServices(CatalogServicesRequest.newBuilder()
-						.setQueryParams(QueryParams.DEFAULT).build());
+			.getCatalogServices(CatalogServicesRequest.newBuilder()
+			                                          .setQueryParams(QueryParams.DEFAULT).build());
 
 		for (String serviceId : catalogServices.getValue().keySet()) {
 			Response<List<CatalogService>> response = this.consul
-					.getCatalogService(serviceId, CatalogServiceRequest.newBuilder()
-							.setQueryParams(QueryParams.DEFAULT).build());
+				.getCatalogService(serviceId, CatalogServiceRequest.newBuilder()
+				                                                   .setQueryParams(QueryParams.DEFAULT).build());
 			data.getCatalogServices().put(serviceId, response.getValue());
 		}
 
 		Response<List<Node>> catalogNodes = this.consul
-				.getCatalogNodes(CatalogNodesRequest.newBuilder()
-						.setQueryParams(QueryParams.DEFAULT).build());
+			.getCatalogNodes(CatalogNodesRequest.newBuilder()
+			                                    .setQueryParams(QueryParams.DEFAULT).build());
 		data.setCatalogNodes(catalogNodes.getValue());
 
 		return data;
@@ -91,7 +90,7 @@ public class ConsulEndpoint {
 		}
 
 		public void setCatalogServices(
-				Map<String, List<CatalogService>> catalogServices) {
+			Map<String, List<CatalogService>> catalogServices) {
 			this.catalogServices = catalogServices;
 		}
 
@@ -114,9 +113,9 @@ public class ConsulEndpoint {
 		@Override
 		public String toString() {
 			return new ToStringCreator(this)
-					.append("catalogServices", this.catalogServices)
-					.append("agentServices", this.agentServices)
-					.append("catalogNodes", this.catalogNodes).toString();
+				.append("catalogServices", this.catalogServices)
+				.append("agentServices", this.agentServices)
+				.append("catalogNodes", this.catalogNodes).toString();
 		}
 
 	}
