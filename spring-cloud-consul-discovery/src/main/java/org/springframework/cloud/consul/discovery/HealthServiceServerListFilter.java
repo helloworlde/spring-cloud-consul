@@ -16,13 +16,13 @@
 
 package org.springframework.cloud.consul.discovery;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ServerListFilter;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * ServerList implementation that filters ConsulServers based on if all their Health
@@ -34,6 +34,12 @@ public class HealthServiceServerListFilter implements ServerListFilter<Server> {
 
 	private static final Log log = LogFactory.getLog(HealthServiceServerListFilter.class);
 
+	/**
+	 * 返回过滤后的服务列表，对于 consul 的服务，如果检查不通过，则丢弃
+	 *
+	 * @param servers
+	 * @return
+	 */
 	@Override
 	public List<Server> getFilteredListOfServers(List<Server> servers) {
 		List<Server> filtered = new ArrayList<>();
@@ -46,11 +52,9 @@ public class HealthServiceServerListFilter implements ServerListFilter<Server> {
 					filtered.add(server);
 				}
 
-			}
-			else {
+			} else {
 				if (log.isDebugEnabled()) {
-					log.debug("Unable to determine aliveness of server type "
-							+ server.getClass() + ", " + server);
+					log.debug("Unable to determine aliveness of server type " + server.getClass() + ", " + server);
 				}
 				filtered.add(server);
 			}

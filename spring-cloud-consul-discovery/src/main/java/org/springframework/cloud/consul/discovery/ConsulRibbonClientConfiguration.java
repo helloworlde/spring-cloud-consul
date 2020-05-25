@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.consul.discovery;
 
-import javax.annotation.PostConstruct;
-
 import com.ecwid.consul.v1.ConsulClient;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.config.ConfigurationManager;
@@ -27,12 +25,13 @@ import com.netflix.loadbalancer.IPing;
 import com.netflix.loadbalancer.Server;
 import com.netflix.loadbalancer.ServerList;
 import com.netflix.loadbalancer.ServerListFilter;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import javax.annotation.PostConstruct;
 
 import static com.netflix.client.config.CommonClientConfigKey.DeploymentContextBasedVipAddresses;
 import static com.netflix.client.config.CommonClientConfigKey.EnableZoneAffinity;
@@ -68,18 +67,28 @@ public class ConsulRibbonClientConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public ServerList<?> ribbonServerList(IClientConfig config,
-			ConsulDiscoveryProperties properties) {
+	                                      ConsulDiscoveryProperties properties) {
 		ConsulServerList serverList = new ConsulServerList(this.client, properties);
 		serverList.initWithNiwsConfig(config);
 		return serverList;
 	}
 
+	/**
+	 * 过滤不健康的服务
+	 *
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public ServerListFilter<Server> ribbonServerListFilter() {
 		return new HealthServiceServerListFilter();
 	}
 
+	/**
+	 * 检测 Server 是否正常
+	 *
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public IPing ribbonPing() {
@@ -92,6 +101,9 @@ public class ConsulRibbonClientConfiguration {
 		return new ConsulServerIntrospector();
 	}
 
+	/**
+	 * 设置属性
+	 */
 	@PostConstruct
 	public void preprocess() {
 		setProp(this.serviceId, DeploymentContextBasedVipAddresses.key(), this.serviceId);

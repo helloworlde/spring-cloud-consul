@@ -16,10 +16,6 @@
 
 package org.springframework.cloud.consul.discovery;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
@@ -27,6 +23,10 @@ import com.ecwid.consul.v1.health.HealthServicesRequest;
 import com.ecwid.consul.v1.health.model.HealthService;
 import com.netflix.client.config.IClientConfig;
 import com.netflix.loadbalancer.AbstractServerList;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * @author Spencer Gibb
@@ -78,11 +78,13 @@ public class ConsulServerList extends AbstractServerList<ConsulServer> {
 			return Collections.emptyList();
 		}
 		HealthServicesRequest request = HealthServicesRequest.newBuilder()
-				.setTag(getTag()).setPassing(this.properties.isQueryPassing())
-				.setQueryParams(createQueryParamsForClientRequest())
-				.setToken(this.properties.getAclToken()).build();
-		Response<List<HealthService>> response = this.client
-				.getHealthServices(this.serviceId, request);
+		                                                     .setTag(getTag())
+		                                                     .setPassing(this.properties.isQueryPassing())
+		                                                     .setQueryParams(createQueryParamsForClientRequest())
+		                                                     .setToken(this.properties.getAclToken()).build();
+
+		Response<List<HealthService>> response = this.client.getHealthServices(this.serviceId, request);
+
 		if (response.getValue() == null || response.getValue().isEmpty()) {
 			return Collections.emptyList();
 		}
@@ -91,20 +93,18 @@ public class ConsulServerList extends AbstractServerList<ConsulServer> {
 
 	/**
 	 * Transforms the response from Consul in to a list of usable {@link ConsulServer}s.
+	 *
 	 * @param healthServices the initial list of servers from Consul. Guaranteed to be
-	 * non-empty list
+	 *                       non-empty list
 	 * @return ConsulServer instances
 	 * @see ConsulServer#ConsulServer(HealthService)
 	 */
 	protected List<ConsulServer> transformResponse(List<HealthService> healthServices) {
 		List<ConsulServer> servers = new ArrayList<>();
 		for (HealthService service : healthServices) {
-			ConsulServer server = new ConsulServer(service,
-					properties.isTagsAsMetadata());
-			if (server.getMetadata()
-					.containsKey(this.properties.getDefaultZoneMetadataName())) {
-				server.setZone(server.getMetadata()
-						.get(this.properties.getDefaultZoneMetadataName()));
+			ConsulServer server = new ConsulServer(service, properties.isTagsAsMetadata());
+			if (server.getMetadata().containsKey(this.properties.getDefaultZoneMetadataName())) {
+				server.setZone(server.getMetadata().get(this.properties.getDefaultZoneMetadataName()));
 			}
 			servers.add(server);
 		}
@@ -115,6 +115,7 @@ public class ConsulServerList extends AbstractServerList<ConsulServer> {
 	 * This method will create the {@link QueryParams} to use when retrieving the services
 	 * from Consul. By default {@link QueryParams#DEFAULT} is used. In case a datacenter
 	 * is specified for the current serviceId {@link QueryParams#datacenter} is set.
+	 *
 	 * @return an instance of {@link QueryParams}
 	 */
 	protected QueryParams createQueryParamsForClientRequest() {

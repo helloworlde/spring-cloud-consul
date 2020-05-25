@@ -16,14 +16,13 @@
 
 package org.springframework.cloud.consul.discovery.filters;
 
+import com.netflix.loadbalancer.Server;
+import com.netflix.loadbalancer.ServerListFilter;
+import org.springframework.cloud.consul.discovery.ConsulServer;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-
-import com.netflix.loadbalancer.Server;
-import com.netflix.loadbalancer.ServerListFilter;
-
-import org.springframework.cloud.consul.discovery.ConsulServer;
 
 /**
  * Server filter: returns only alive servers. Each consul agent runs a serf agent which is
@@ -49,8 +48,7 @@ public class AliveServerListFilter implements ServerListFilter<Server> {
 		List<Server> filteredServers = new ArrayList<>();
 		for (Server server : servers) {
 			ConsulServer consulServer = ConsulServer.class.cast(server);
-			if (liveNodes.contains(
-					consulServer.getHealthService().getService().getAddress())) {
+			if (liveNodes.contains(consulServer.getHealthService().getService().getAddress())) {
 				filteredServers.add(server);
 			}
 		}

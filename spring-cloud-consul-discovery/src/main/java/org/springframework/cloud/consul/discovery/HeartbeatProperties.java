@@ -16,17 +16,16 @@
 
 package org.springframework.cloud.consul.discovery;
 
+import org.apache.commons.logging.Log;
+import org.joda.time.Period;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.style.ToStringCreator;
+import org.springframework.validation.annotation.Validated;
+
 import javax.validation.constraints.DecimalMax;
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
-
-import org.apache.commons.logging.Log;
-import org.joda.time.Period;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.core.style.ToStringCreator;
-import org.springframework.validation.annotation.Validated;
 
 /**
  * Properties related to hearbeat verification.
@@ -38,7 +37,7 @@ import org.springframework.validation.annotation.Validated;
 public class HeartbeatProperties {
 
 	private static final Log log = org.apache.commons.logging.LogFactory
-			.getLog(HeartbeatProperties.class);
+		.getLog(HeartbeatProperties.class);
 
 	// TODO: change enabled to default to true when I stop seeing messages like
 	// [WARN] agent: Check 'service:testConsulApp:xtest:8080' missed TTL, is now critical
@@ -55,8 +54,8 @@ public class HeartbeatProperties {
 	private double intervalRatio = 2.0 / 3.0;
 
 	/**
-	 * @deprecated the joda time {@link Period} will be replaced with java8 duration.
 	 * @return the computed heartbeat interval
+	 * @deprecated the joda time {@link Period} will be replaced with java8 duration.
 	 */
 	@Deprecated
 	protected Period computeHearbeatInterval() {
@@ -109,15 +108,15 @@ public class HeartbeatProperties {
 	}
 
 	public void setIntervalRatio(
-			@DecimalMin("0.1") @DecimalMax("0.9") double intervalRatio) {
+		@DecimalMin("0.1") @DecimalMax("0.9") double intervalRatio) {
 		this.intervalRatio = intervalRatio;
 	}
 
 	@Override
 	public String toString() {
 		return new ToStringCreator(this).append("enabled", this.enabled)
-				.append("ttlValue", this.ttlValue).append("ttlUnit", this.ttlUnit)
-				.append("intervalRatio", this.intervalRatio).toString();
+		                                .append("ttlValue", this.ttlValue).append("ttlUnit", this.ttlUnit)
+		                                .append("intervalRatio", this.intervalRatio).toString();
 	}
 
 }
