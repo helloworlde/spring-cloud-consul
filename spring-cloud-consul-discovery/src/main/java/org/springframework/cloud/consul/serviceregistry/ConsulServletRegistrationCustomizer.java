@@ -16,13 +16,12 @@
 
 package org.springframework.cloud.consul.serviceregistry;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.servlet.ServletContext;
-
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.util.StringUtils;
+
+import javax.servlet.ServletContext;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Piotr Wielgolaski
@@ -32,18 +31,21 @@ public class ConsulServletRegistrationCustomizer implements ConsulRegistrationCu
 	private ObjectProvider<ServletContext> servletContext;
 
 	public ConsulServletRegistrationCustomizer(
-			ObjectProvider<ServletContext> servletContext) {
+		ObjectProvider<ServletContext> servletContext) {
 		this.servletContext = servletContext;
 	}
 
+	/**
+	 * 将 contextPath 添加到Tag 中
+	 * @param registration
+	 */
 	@Override
 	public void customize(ConsulRegistration registration) {
 		if (this.servletContext == null) {
 			return;
 		}
 		ServletContext sc = this.servletContext.getIfAvailable();
-		if (sc != null && StringUtils.hasText(sc.getContextPath())
-				&& StringUtils.hasText(sc.getContextPath().replaceAll("/", ""))) {
+		if (sc != null && StringUtils.hasText(sc.getContextPath()) && StringUtils.hasText(sc.getContextPath().replaceAll("/", ""))) {
 			List<String> tags = registration.getService().getTags();
 			if (tags == null) {
 				tags = new ArrayList<>();

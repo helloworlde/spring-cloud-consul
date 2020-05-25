@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.consul.serviceregistry;
 
-import java.util.List;
-
 import com.ecwid.consul.ConsulException;
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
@@ -27,17 +25,20 @@ import com.ecwid.consul.v1.health.HealthChecksForServiceRequest;
 import com.ecwid.consul.v1.health.model.Check;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.cloud.client.serviceregistry.ServiceRegistry;
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryProperties;
 import org.springframework.cloud.consul.discovery.HeartbeatProperties;
 import org.springframework.cloud.consul.discovery.TtlScheduler;
 import org.springframework.util.ReflectionUtils;
 
+import java.util.List;
+
 import static org.springframework.boot.actuate.health.Status.OUT_OF_SERVICE;
 import static org.springframework.boot.actuate.health.Status.UP;
 
 /**
+ * 服务注册
+ *
  * @author Spencer Gibb
  */
 public class ConsulServiceRegistry implements ServiceRegistry<ConsulRegistration> {
@@ -53,38 +54,48 @@ public class ConsulServiceRegistry implements ServiceRegistry<ConsulRegistration
 	private final HeartbeatProperties heartbeatProperties;
 
 	public ConsulServiceRegistry(ConsulClient client,
-			ConsulDiscoveryProperties properties, TtlScheduler ttlScheduler,
-			HeartbeatProperties heartbeatProperties) {
+	                             ConsulDiscoveryProperties properties, TtlScheduler ttlScheduler,
+	                             HeartbeatProperties heartbeatProperties) {
 		this.client = client;
 		this.properties = properties;
 		this.ttlScheduler = ttlScheduler;
 		this.heartbeatProperties = heartbeatProperties;
 	}
 
+	/**
+	 * 注册服务
+	 *
+	 * @param reg
+	 */
 	@Override
 	public void register(ConsulRegistration reg) {
 		log.info("Registering service with consul: " + reg.getService());
 		try {
-			this.client.agentServiceRegister(reg.getService(),
-					this.properties.getAclToken());
+			// 将服务注册到 Consul
+			this.client.agentServiceRegister(reg.getService(), this.properties.getAclToken());
 			NewService service = reg.getService();
-			if (this.heartbeatProperties.isEnabled() && this.ttlScheduler != null
-					&& service.getCheck() != null
-					&& service.getCheck().getTtl() != null) {
+
+			// 添加到心跳检查中
+			if (this.heartbeatProperties.isEnabled() &&
+				this.ttlScheduler != null &&
+				service.getCheck() != null &&
+				service.getCheck().getTtl() != null) {
 				this.ttlScheduler.add(reg.getInstanceId());
 			}
-		}
-		catch (ConsulException e) {
+		} catch (ConsulException e) {
 			if (this.properties.isFailFast()) {
-				log.error("Error registering service with consul: " + reg.getService(),
-						e);
+				log.error("Error registering service with consul: " + reg.getService(), e);
 				ReflectionUtils.rethrowRuntimeException(e);
 			}
-			log.warn("Failfast is false. Error registering service with consul: "
-					+ reg.getService(), e);
+			log.warn("Failfast is false. Error registering service with consul: " + reg.getService(), e);
 		}
 	}
 
+	/**
+	 * 服务取消注册
+	 *
+	 * @param reg
+	 */
 	@Override
 	public void deregister(ConsulRegistration reg) {
 		if (this.ttlScheduler != null) {
@@ -93,8 +104,8 @@ public class ConsulServiceRegistry implements ServiceRegistry<ConsulRegistration
 		if (log.isInfoEnabled()) {
 			log.info("Deregistering service with consul: " + reg.getInstanceId());
 		}
-		this.client.agentServiceDeregister(reg.getInstanceId(),
-				this.properties.getAclToken());
+		// 将实例从 Consul 中移除
+		this.client.agentServiceDeregister(reg.getInstanceId(), this.properties.getAclToken());
 	}
 
 	@Override
@@ -102,15 +113,19 @@ public class ConsulServiceRegistry implements ServiceRegistry<ConsulRegistration
 
 	}
 
+	/**
+	 * 更新实例状态
+	 *
+	 * @param registration
+	 * @param status
+	 */
 	@Override
 	public void setStatus(ConsulRegistration registration, String status) {
 		if (status.equalsIgnoreCase(OUT_OF_SERVICE.getCode())) {
 			this.client.agentServiceSetMaintenance(registration.getInstanceId(), true);
-		}
-		else if (status.equalsIgnoreCase(UP.getCode())) {
+		} else if (status.equalsIgnoreCase(UP.getCode())) {
 			this.client.agentServiceSetMaintenance(registration.getInstanceId(), false);
-		}
-		else {
+		} else {
 			throw new IllegalArgumentException("Unknown status: " + status);
 		}
 
@@ -120,8 +135,8 @@ public class ConsulServiceRegistry implements ServiceRegistry<ConsulRegistration
 	public Object getStatus(ConsulRegistration registration) {
 		String serviceId = registration.getServiceId();
 		Response<List<Check>> response = this.client.getHealthChecksForService(serviceId,
-				HealthChecksForServiceRequest.newBuilder()
-						.setQueryParams(QueryParams.DEFAULT).build());
+			HealthChecksForServiceRequest.newBuilder()
+			                             .setQueryParams(QueryParams.DEFAULT).build());
 		List<Check> checks = response.getValue();
 
 		for (Check check : checks) {

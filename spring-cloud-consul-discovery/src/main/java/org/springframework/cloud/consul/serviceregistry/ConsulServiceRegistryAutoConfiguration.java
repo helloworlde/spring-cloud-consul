@@ -17,7 +17,6 @@
 package org.springframework.cloud.consul.serviceregistry;
 
 import com.ecwid.consul.v1.ConsulClient;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.AllNestedConditions;
@@ -34,6 +33,8 @@ import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 /**
+ * Consul 注册配置
+ *
  * @author Spencer Gibb
  * @author Tim Ysewyn
  */
@@ -46,10 +47,10 @@ public class ConsulServiceRegistryAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public ConsulServiceRegistry consulServiceRegistry(ConsulClient consulClient,
-			ConsulDiscoveryProperties properties, HeartbeatProperties heartbeatProperties,
-			@Autowired(required = false) TtlScheduler ttlScheduler) {
-		return new ConsulServiceRegistry(consulClient, properties, ttlScheduler,
-				heartbeatProperties);
+	                                                   ConsulDiscoveryProperties properties,
+	                                                   HeartbeatProperties heartbeatProperties,
+	                                                   @Autowired(required = false) TtlScheduler ttlScheduler) {
+		return new ConsulServiceRegistry(consulClient, properties, ttlScheduler, heartbeatProperties);
 	}
 
 	@Bean
@@ -66,20 +67,20 @@ public class ConsulServiceRegistryAutoConfiguration {
 	}
 
 	protected static class OnConsulRegistrationEnabledCondition
-			extends AllNestedConditions {
+		extends AllNestedConditions {
 
 		OnConsulRegistrationEnabledCondition() {
 			super(ConfigurationPhase.REGISTER_BEAN);
 		}
 
 		@ConditionalOnProperty(value = "spring.cloud.service-registry.enabled",
-				matchIfMissing = true)
+			matchIfMissing = true)
 		static class ServiceRegistryEnabledClass {
 
 		}
 
 		@ConditionalOnProperty(value = "spring.cloud.consul.service-registry.enabled",
-				matchIfMissing = true)
+			matchIfMissing = true)
 		static class ConsulServiceRegistryEnabledClass {
 
 		}
