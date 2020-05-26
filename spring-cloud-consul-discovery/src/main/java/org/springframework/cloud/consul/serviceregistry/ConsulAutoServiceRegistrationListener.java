@@ -23,6 +23,7 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.event.SmartApplicationListener;
 
 /**
+ * 事件监听器，当 web 容器初始化完成后自动注册服务到 Consul 中
  * Auto registers service upon web server initialization.
  *
  * @author Spencer Gibb
@@ -31,8 +32,7 @@ public class ConsulAutoServiceRegistrationListener implements SmartApplicationLi
 
 	private final ConsulAutoServiceRegistration autoServiceRegistration;
 
-	public ConsulAutoServiceRegistrationListener(
-			ConsulAutoServiceRegistration autoServiceRegistration) {
+	public ConsulAutoServiceRegistrationListener(ConsulAutoServiceRegistration autoServiceRegistration) {
 		this.autoServiceRegistration = autoServiceRegistration;
 	}
 
@@ -48,18 +48,18 @@ public class ConsulAutoServiceRegistrationListener implements SmartApplicationLi
 
 	@Override
 	public void onApplicationEvent(ApplicationEvent applicationEvent) {
+		// 判断是否是 web server 初始化事件
 		if (applicationEvent instanceof WebServerInitializedEvent) {
 			WebServerInitializedEvent event = (WebServerInitializedEvent) applicationEvent;
 
 			ApplicationContext context = event.getApplicationContext();
 			if (context instanceof ConfigurableWebServerApplicationContext) {
-				if ("management"
-						.equals(((ConfigurableWebServerApplicationContext) context)
-								.getServerNamespace())) {
+				if ("management".equals(((ConfigurableWebServerApplicationContext) context).getServerNamespace())) {
 					return;
 				}
 			}
 			this.autoServiceRegistration.setPortIfNeeded(event.getWebServer().getPort());
+			// 真正触发服务注册
 			this.autoServiceRegistration.start();
 		}
 	}

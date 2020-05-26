@@ -16,20 +16,20 @@
 
 package org.springframework.cloud.consul.discovery;
 
+import com.ecwid.consul.v1.ConsulClient;
+import com.ecwid.consul.v1.agent.model.NewService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 
-import com.ecwid.consul.v1.ConsulClient;
-import com.ecwid.consul.v1.agent.model.NewService;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
-
 /**
+ * 服务心跳检测定时任务
  * Created by nicu on 11.03.2015.
  *
  * @author Stéphane LEROY
@@ -41,7 +41,7 @@ public class TtlScheduler {
 	private final Map<String, ScheduledFuture> serviceHeartbeats = new ConcurrentHashMap<>();
 
 	private final TaskScheduler scheduler = new ConcurrentTaskScheduler(
-			Executors.newSingleThreadScheduledExecutor());
+		Executors.newSingleThreadScheduledExecutor());
 
 	private HeartbeatProperties configuration;
 
@@ -59,12 +59,13 @@ public class TtlScheduler {
 
 	/**
 	 * Add a service to the checks loop.
+	 *
 	 * @param instanceId instance id
 	 */
 	public void add(String instanceId) {
 		ScheduledFuture task = this.scheduler.scheduleAtFixedRate(
-				new ConsulHeartbeatTask(instanceId), this.configuration
-						.computeHeartbeatInterval().toStandardDuration().getMillis());
+			new ConsulHeartbeatTask(instanceId), this.configuration
+				.computeHeartbeatInterval().toStandardDuration().getMillis());
 		ScheduledFuture previousTask = this.serviceHeartbeats.put(instanceId, task);
 		if (previousTask != null) {
 			previousTask.cancel(true);
@@ -79,6 +80,9 @@ public class TtlScheduler {
 		this.serviceHeartbeats.remove(instanceId);
 	}
 
+	/**
+	 * 心跳检查任务
+	 */
 	private class ConsulHeartbeatTask implements Runnable {
 
 		private String checkId;
