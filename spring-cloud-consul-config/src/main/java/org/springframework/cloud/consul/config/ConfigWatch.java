@@ -16,12 +16,6 @@
 
 package org.springframework.cloud.consul.config;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
@@ -29,7 +23,6 @@ import com.ecwid.consul.v1.kv.model.GetValue;
 import io.micrometer.core.annotation.Timed;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.cloud.endpoint.event.RefreshEvent;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationEventPublisherAware;
@@ -39,6 +32,12 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.springframework.cloud.consul.config.ConsulConfigProperties.Format.FILES;
 
@@ -66,12 +65,12 @@ public class ConfigWatch implements ApplicationEventPublisherAware, SmartLifecyc
 	private ScheduledFuture<?> watchFuture;
 
 	public ConfigWatch(ConsulConfigProperties properties, ConsulClient consul,
-			LinkedHashMap<String, Long> initialIndexes) {
+	                   LinkedHashMap<String, Long> initialIndexes) {
 		this(properties, consul, initialIndexes, getTaskScheduler());
 	}
 
 	public ConfigWatch(ConsulConfigProperties properties, ConsulClient consul,
-			LinkedHashMap<String, Long> initialIndexes, TaskScheduler taskScheduler) {
+	                   LinkedHashMap<String, Long> initialIndexes, TaskScheduler taskScheduler) {
 		this.properties = properties;
 		this.consul = consul;
 		this.consulIndexes = new LinkedHashMap<>(initialIndexes);
@@ -89,11 +88,14 @@ public class ConfigWatch implements ApplicationEventPublisherAware, SmartLifecyc
 		this.publisher = publisher;
 	}
 
+	/**
+	 * 定时任务监听
+	 */
 	@Override
 	public void start() {
 		if (this.running.compareAndSet(false, true)) {
 			this.watchFuture = this.taskScheduler.scheduleWithFixedDelay(
-					this::watchConfigKeyValues, this.properties.getWatch().getDelay());
+				this::watchConfigKeyValues, this.properties.getWatch().getDelay());
 		}
 	}
 
@@ -142,8 +144,7 @@ public class ConfigWatch implements ApplicationEventPublisherAware, SmartLifecyc
 						currentIndex = -1L;
 					}
 
-					log.trace("watching consul for context '" + context + "' with index "
-							+ currentIndex);
+					log.trace("watching consul for context '" + context + "' with index " + currentIndex);
 
 					// use the consul ACL token if found
 					String aclToken = this.properties.getAclToken();
@@ -151,10 +152,8 @@ public class ConfigWatch implements ApplicationEventPublisherAware, SmartLifecyc
 						aclToken = null;
 					}
 
-					Response<List<GetValue>> response = this.consul.getKVValues(context,
-							aclToken,
-							new QueryParams(this.properties.getWatch().getWaitTime(),
-									currentIndex));
+					// 获取指定的 key
+					Response<List<GetValue>> response = this.consul.getKVValues(context, aclToken, new QueryParams(this.properties.getWatch().getWaitTime(), currentIndex));
 
 					// if response.value == null, response was a 404, otherwise it was a
 					// 200
@@ -162,49 +161,38 @@ public class ConfigWatch implements ApplicationEventPublisherAware, SmartLifecyc
 					if (response.getValue() != null && !response.getValue().isEmpty()) {
 						Long newIndex = response.getConsulIndex();
 
+						// 判断 key 的 index 是否相等，如果发生变化，则发出 RefreshEvent 事件
 						if (newIndex != null && !newIndex.equals(currentIndex)) {
 							// don't publish the same index again, don't publish the first
 							// time (-1) so index can be primed
-							if (!this.consulIndexes.containsValue(newIndex)
-									&& !currentIndex.equals(-1L)) {
-								log.trace("Context " + context + " has new index "
-										+ newIndex);
-								RefreshEventData data = new RefreshEventData(context,
-										currentIndex, newIndex);
-								this.publisher.publishEvent(
-										new RefreshEvent(this, data, data.toString()));
-							}
-							else if (log.isTraceEnabled()) {
-								log.trace("Event for index already published for context "
-										+ context);
+							// 没有发布过这个 index 的事件，且不是第一次发布
+							if (!this.consulIndexes.containsValue(newIndex) && !currentIndex.equals(-1L)) {
+								log.trace("Context " + context + " has new index " + newIndex);
+								// 发送事件
+								RefreshEventData data = new RefreshEventData(context, currentIndex, newIndex);
+								this.publisher.publishEvent(new RefreshEvent(this, data, data.toString()));
+							} else if (log.isTraceEnabled()) {
+								log.trace("Event for index already published for context " + context);
 							}
 							this.consulIndexes.put(context, newIndex);
-						}
-						else if (log.isTraceEnabled()) {
+						} else if (log.isTraceEnabled()) {
 							log.trace("Same index for context " + context);
 						}
-					}
-					else if (log.isTraceEnabled()) {
+					} else if (log.isTraceEnabled()) {
 						log.trace("No value for context " + context);
 					}
 
-				}
-				catch (Exception e) {
+				} catch (Exception e) {
 					// only fail fast on the initial query, otherwise just log the error
 					if (this.firstTime && this.properties.isFailFast()) {
-						log.error(
-								"Fail fast is set and there was an error reading configuration from consul.");
+						log.error("Fail fast is set and there was an error reading configuration from consul.");
 						ReflectionUtils.rethrowRuntimeException(e);
-					}
-					else if (log.isTraceEnabled()) {
-						log.trace("Error querying consul Key/Values for context '"
-								+ context + "'", e);
-					}
-					else if (log.isWarnEnabled()) {
+					} else if (log.isTraceEnabled()) {
+						log.trace("Error querying consul Key/Values for context '" + context + "'", e);
+					} else if (log.isWarnEnabled()) {
 						// simplified one line log message in the event of an agent
 						// failure
-						log.warn("Error querying consul Key/Values for context '"
-								+ context + "'. Message: " + e.getMessage());
+						log.warn("Error querying consul Key/Values for context '" + context + "'. Message: " + e.getMessage());
 					}
 				}
 			}
@@ -248,8 +236,8 @@ public class ConfigWatch implements ApplicationEventPublisherAware, SmartLifecyc
 			}
 			RefreshEventData that = (RefreshEventData) o;
 			return Objects.equals(this.context, that.context)
-					&& Objects.equals(this.prevIndex, that.prevIndex)
-					&& Objects.equals(this.newIndex, that.newIndex);
+				&& Objects.equals(this.prevIndex, that.prevIndex)
+				&& Objects.equals(this.newIndex, that.newIndex);
 		}
 
 		@Override
@@ -260,8 +248,8 @@ public class ConfigWatch implements ApplicationEventPublisherAware, SmartLifecyc
 		@Override
 		public String toString() {
 			return new ToStringCreator(this).append("context", this.context)
-					.append("prevIndex", this.prevIndex).append("newIndex", this.newIndex)
-					.toString();
+			                                .append("prevIndex", this.prevIndex).append("newIndex", this.newIndex)
+			                                .toString();
 		}
 
 	}

@@ -27,8 +27,7 @@ import static org.springframework.cloud.consul.config.ConsulConfigProperties.For
  */
 public class ConsulFilesPropertySource extends ConsulPropertySource {
 
-	public ConsulFilesPropertySource(String context, ConsulClient source,
-			ConsulConfigProperties configProperties) {
+	public ConsulFilesPropertySource(String context, ConsulClient source, ConsulConfigProperties configProperties) {
 		super(context, source, configProperties);
 	}
 
@@ -37,16 +36,18 @@ public class ConsulFilesPropertySource extends ConsulPropertySource {
 		// noop
 	}
 
+	/**
+	 * 解析配置内容
+	 * @param value
+	 */
 	public void init(GetValue value) {
 		if (this.getContext().endsWith(".yml") || this.getContext().endsWith(".yaml")) {
 			parseValue(value, YAML);
-		}
-		else if (this.getContext().endsWith(".properties")) {
+		} else if (this.getContext().endsWith(".properties")) {
 			parseValue(value, PROPERTIES);
-		}
-		else {
+		} else {
 			throw new IllegalStateException(
-					"Unknown files extension for context " + this.getContext());
+				"Unknown files extension for context " + this.getContext());
 		}
 	}
 

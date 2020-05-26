@@ -16,9 +16,9 @@
 
 package org.springframework.cloud.consul.config;
 
-import java.util.LinkedHashMap;
-
 import org.springframework.context.ApplicationEvent;
+
+import java.util.LinkedHashMap;
 
 /**
  * @author Spencer Gibb
@@ -29,11 +29,11 @@ public class PropertySourcesLocatedEvent extends ApplicationEvent {
 
 	/**
 	 * Create a new ApplicationEvent.
-	 * @param source the object on which the event initially occurred (never {@code null})
+	 *
+	 * @param source            the object on which the event initially occurred (never {@code null})
 	 * @param contextsToIndexes contexts to indexes
 	 */
-	public PropertySourcesLocatedEvent(Object source,
-			LinkedHashMap<String, Long> contextsToIndexes) {
+	public PropertySourcesLocatedEvent(Object source, LinkedHashMap<String, Long> contextsToIndexes) {
 		super(source);
 		this.contextsToIndexes = contextsToIndexes;
 	}

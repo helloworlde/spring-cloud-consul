@@ -17,7 +17,6 @@
 package org.springframework.cloud.consul.config;
 
 import com.ecwid.consul.v1.ConsulClient;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -29,6 +28,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 
 /**
+ * 应用配置类
+ *
  * @author Spencer Gibb
  * @author Edvin Eriksson
  */
@@ -39,8 +40,7 @@ public class ConsulConfigBootstrapConfiguration {
 	@Configuration(proxyBeanMethods = false)
 	@EnableConfigurationProperties
 	@Import(ConsulAutoConfiguration.class)
-	@ConditionalOnProperty(name = "spring.cloud.consul.config.enabled",
-			matchIfMissing = true)
+	@ConditionalOnProperty(name = "spring.cloud.consul.config.enabled", matchIfMissing = true)
 	protected static class ConsulPropertySourceConfiguration {
 
 		@Autowired
@@ -53,8 +53,7 @@ public class ConsulConfigBootstrapConfiguration {
 		}
 
 		@Bean
-		public ConsulPropertySourceLocator consulPropertySourceLocator(
-				ConsulConfigProperties consulConfigProperties) {
+		public ConsulPropertySourceLocator consulPropertySourceLocator(ConsulConfigProperties consulConfigProperties) {
 			return new ConsulPropertySourceLocator(this.consul, consulConfigProperties);
 		}
 

@@ -16,20 +16,11 @@
 
 package org.springframework.cloud.consul.config;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.kv.model.GetValue;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.springframework.cloud.bootstrap.config.PropertySourceLocator;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.CompositePropertySource;
@@ -39,6 +30,8 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
+
+import java.util.*;
 
 import static org.springframework.cloud.consul.config.ConsulConfigProperties.Format.FILES;
 
@@ -59,7 +52,7 @@ public class ConsulPropertySourceLocator implements PropertySourceLocator {
 	private final LinkedHashMap<String, Long> contextIndex = new LinkedHashMap<>();
 
 	public ConsulPropertySourceLocator(ConsulClient consul,
-			ConsulConfigProperties properties) {
+	                                   ConsulConfigProperties properties) {
 		this.consul = consul;
 		this.properties = properties;
 	}
@@ -79,6 +72,12 @@ public class ConsulPropertySourceLocator implements PropertySourceLocator {
 		return PropertySourceLocator.locateCollection(this, environment);
 	}
 
+	/**
+	 * 拉取配置文件解析并添加到容器中
+	 *
+	 * @param environment
+	 * @return
+	 */
 	@Override
 	@Retryable(interceptor = "consulRetryInterceptor")
 	public PropertySource<?> locate(Environment environment) {
@@ -96,17 +95,16 @@ public class ConsulPropertySourceLocator implements PropertySourceLocator {
 			String prefix = this.properties.getPrefix();
 
 			List<String> suffixes = new ArrayList<>();
+			// 不是文件类型的时候，后缀为 /，否则就是配置文件的后缀
 			if (this.properties.getFormat() != FILES) {
 				suffixes.add("/");
-			}
-			else {
+			} else {
 				suffixes.add(".yml");
 				suffixes.add(".yaml");
 				suffixes.add(".properties");
 			}
 
-			String defaultContext = getContext(prefix,
-					this.properties.getDefaultContext());
+			String defaultContext = getContext(prefix, this.properties.getDefaultContext());
 
 			for (String suffix : suffixes) {
 				this.contexts.add(defaultContext + suffix);
@@ -132,32 +130,29 @@ public class ConsulPropertySourceLocator implements PropertySourceLocator {
 				try {
 					ConsulPropertySource propertySource = null;
 					if (this.properties.getFormat() == FILES) {
-						Response<GetValue> response = this.consul.getKVValue(
-								propertySourceContext, this.properties.getAclToken());
+						// 获取值
+						Response<GetValue> response = this.consul.getKVValue(propertySourceContext, this.properties.getAclToken());
+						// 添加当前索引
 						addIndex(propertySourceContext, response.getConsulIndex());
+						// 如果值不为空，则更新值并初始化
 						if (response.getValue() != null) {
-							ConsulFilesPropertySource filesPropertySource = new ConsulFilesPropertySource(
-									propertySourceContext, this.consul, this.properties);
+							ConsulFilesPropertySource filesPropertySource = new ConsulFilesPropertySource(propertySourceContext, this.consul, this.properties);
+							// 解析配置内容
 							filesPropertySource.init(response.getValue());
 							propertySource = filesPropertySource;
 						}
-					}
-					else {
+					} else {
 						propertySource = create(propertySourceContext, this.contextIndex);
 					}
 					if (propertySource != null) {
 						composite.addPropertySource(propertySource);
 					}
-				}
-				catch (Exception e) {
+				} catch (Exception e) {
 					if (this.properties.isFailFast()) {
-						log.error(
-								"Fail fast is set and there was an error reading configuration from consul.");
+						log.error("Fail fast is set and there was an error reading configuration from consul.");
 						ReflectionUtils.rethrowRuntimeException(e);
-					}
-					else {
-						log.warn("Unable to load consul config from "
-								+ propertySourceContext, e);
+					} else {
+						log.warn("Unable to load consul config from " + propertySourceContext, e);
 					}
 				}
 			}
@@ -170,8 +165,7 @@ public class ConsulPropertySourceLocator implements PropertySourceLocator {
 	private String getContext(String prefix, String context) {
 		if (StringUtils.isEmpty(prefix)) {
 			return context;
-		}
-		else {
+		} else {
 			return prefix + "/" + context;
 		}
 	}
@@ -181,18 +175,24 @@ public class ConsulPropertySourceLocator implements PropertySourceLocator {
 	}
 
 	private ConsulPropertySource create(String context, Map<String, Long> contextIndex) {
-		ConsulPropertySource propertySource = new ConsulPropertySource(context,
-				this.consul, this.properties);
+		ConsulPropertySource propertySource = new ConsulPropertySource(context, this.consul, this.properties);
 		propertySource.init();
 		addIndex(context, propertySource.getInitialIndex());
 		return propertySource;
 	}
 
+	/**
+	 * 将拉取的配置添加到容器中
+	 *
+	 * @param contexts
+	 * @param baseContext
+	 * @param profiles
+	 * @param suffix
+	 */
 	private void addProfiles(List<String> contexts, String baseContext,
-			List<String> profiles, String suffix) {
+	                         List<String> profiles, String suffix) {
 		for (String profile : profiles) {
-			contexts.add(baseContext + this.properties.getProfileSeparator() + profile
-					+ suffix);
+			contexts.add(baseContext + this.properties.getProfileSeparator() + profile + suffix);
 		}
 	}
 
