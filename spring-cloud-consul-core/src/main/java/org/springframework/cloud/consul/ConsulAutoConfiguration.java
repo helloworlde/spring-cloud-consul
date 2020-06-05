@@ -55,14 +55,14 @@ public class ConsulAutoConfiguration {
 	public ConsulClient consulClient(ConsulProperties consulProperties) {
 		final int agentPort = consulProperties.getPort();
 		final String agentHost = !StringUtils.isEmpty(consulProperties.getScheme())
-				? consulProperties.getScheme() + "://" + consulProperties.getHost()
-				: consulProperties.getHost();
+			? consulProperties.getScheme() + "://" + consulProperties.getHost()
+			: consulProperties.getHost();
 
 		if (consulProperties.getTls() != null) {
 			ConsulProperties.TLSConfig tls = consulProperties.getTls();
 			TLSConfig tlsConfig = new TLSConfig(tls.getKeyStoreInstanceType(),
-					tls.getCertificatePath(), tls.getCertificatePassword(),
-					tls.getKeyStorePath(), tls.getKeyStorePassword());
+				tls.getCertificatePath(), tls.getCertificatePassword(),
+				tls.getKeyStorePath(), tls.getKeyStorePassword());
 			return new ConsulClient(agentHost, agentPort, tlsConfig);
 		}
 		return new ConsulClient(agentHost, agentPort);
@@ -88,13 +88,13 @@ public class ConsulAutoConfiguration {
 
 	}
 
-	@ConditionalOnClass({ Retryable.class, Aspect.class, AopAutoConfiguration.class })
+	@ConditionalOnClass({Retryable.class, Aspect.class, AopAutoConfiguration.class})
 	@Configuration(proxyBeanMethods = false)
 	@EnableRetry(proxyTargetClass = true)
 	@Import(AopAutoConfiguration.class)
 	@EnableConfigurationProperties(RetryProperties.class)
 	@ConditionalOnProperty(value = "spring.cloud.consul.retry.enabled",
-			matchIfMissing = true)
+		matchIfMissing = true)
 	protected static class RetryConfiguration {
 
 		@Bean(name = "consulRetryInterceptor")

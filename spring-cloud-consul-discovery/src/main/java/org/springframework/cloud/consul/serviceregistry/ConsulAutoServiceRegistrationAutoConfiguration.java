@@ -48,6 +48,15 @@ public class ConsulAutoServiceRegistrationAutoConfiguration {
 	@Autowired
 	AutoServiceRegistrationProperties autoServiceRegistrationProperties;
 
+	/**
+	 * 注册
+	 *
+	 * @param registry
+	 * @param autoServiceRegistrationProperties
+	 * @param properties
+	 * @param consulRegistration
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public ConsulAutoServiceRegistration consulAutoServiceRegistration(
@@ -58,12 +67,29 @@ public class ConsulAutoServiceRegistrationAutoConfiguration {
 		return new ConsulAutoServiceRegistration(registry, autoServiceRegistrationProperties, properties, consulRegistration);
 	}
 
+	/**
+	 * 启动事件监听器
+	 *
+	 * @param registration
+	 * @return
+	 */
 	@Bean
 	public ConsulAutoServiceRegistrationListener consulAutoServiceRegistrationListener(
 		ConsulAutoServiceRegistration registration) {
 		return new ConsulAutoServiceRegistrationListener(registration);
 	}
 
+	/**
+	 * 注册实现类
+	 *
+	 * @param autoServiceRegistrationProperties
+	 * @param properties
+	 * @param applicationContext
+	 * @param registrationCustomizers
+	 * @param managementRegistrationCustomizers
+	 * @param heartbeatProperties
+	 * @return
+	 */
 	@Bean
 	@ConditionalOnMissingBean
 	public ConsulAutoRegistration consulRegistration(
