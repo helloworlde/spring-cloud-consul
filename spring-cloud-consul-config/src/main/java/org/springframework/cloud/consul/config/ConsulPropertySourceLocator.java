@@ -104,17 +104,20 @@ public class ConsulPropertySourceLocator implements PropertySourceLocator {
 				suffixes.add(".properties");
 			}
 
+			// 路径
 			String defaultContext = getContext(prefix, this.properties.getDefaultContext());
 
 			for (String suffix : suffixes) {
 				this.contexts.add(defaultContext + suffix);
 			}
+			// 追加环境及文件类型
 			for (String suffix : suffixes) {
 				addProfiles(this.contexts, defaultContext, profiles, suffix);
 			}
 
 			String baseContext = getContext(prefix, appName);
 
+			// 应用名称前缀
 			for (String suffix : suffixes) {
 				this.contexts.add(baseContext + suffix);
 			}

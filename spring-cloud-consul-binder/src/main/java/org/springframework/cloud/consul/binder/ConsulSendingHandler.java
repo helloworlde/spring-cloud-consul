@@ -21,7 +21,6 @@ import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
 import com.ecwid.consul.v1.event.model.Event;
 import com.ecwid.consul.v1.event.model.EventParams;
-
 import org.springframework.integration.handler.AbstractMessageHandler;
 import org.springframework.messaging.Message;
 
@@ -50,8 +49,10 @@ public class ConsulSendingHandler extends AbstractMessageHandler {
 		Object payload = message.getPayload();
 		// TODO: support headers
 		// TODO: support consul event filters: NodeFilter, ServiceFilter, TagFilter
-		Response<Event> event = this.consul.eventFire(this.eventName, (String) payload,
-				new EventParams(), QueryParams.DEFAULT);
+		Response<Event> event = this.consul.eventFire(this.eventName,
+			(String) payload,
+			new EventParams(),
+			QueryParams.DEFAULT);
 		// TODO: return event?
 		// return null;
 	}

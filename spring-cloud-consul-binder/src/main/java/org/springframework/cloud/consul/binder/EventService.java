@@ -16,11 +16,6 @@
 
 package org.springframework.cloud.consul.binder;
 
-import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
-
-import javax.annotation.PostConstruct;
-
 import com.ecwid.consul.v1.ConsulClient;
 import com.ecwid.consul.v1.QueryParams;
 import com.ecwid.consul.v1.Response;
@@ -28,8 +23,11 @@ import com.ecwid.consul.v1.event.EventListRequest;
 import com.ecwid.consul.v1.event.model.Event;
 import com.ecwid.consul.v1.event.model.EventParams;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import org.springframework.cloud.consul.binder.config.ConsulBinderProperties;
+
+import javax.annotation.PostConstruct;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * @author Spencer Gibb
@@ -45,7 +43,7 @@ public class EventService {
 	private AtomicReference<Long> lastIndex = new AtomicReference<>();
 
 	public EventService(ConsulBinderProperties properties, ConsulClient consul,
-			ObjectMapper objectMapper) {
+	                    ObjectMapper objectMapper) {
 		this.properties = properties;
 		this.consul = consul;
 		this.objectMapper = objectMapper;
@@ -73,13 +71,13 @@ public class EventService {
 
 	public Event fire(String name, String payload) {
 		Response<Event> response = this.consul.eventFire(name, payload, new EventParams(),
-				QueryParams.DEFAULT);
+			QueryParams.DEFAULT);
 		return response.getValue();
 	}
 
 	public Response<List<Event>> getEventsResponse() {
 		return this.consul.eventList(EventListRequest.newBuilder()
-				.setQueryParams(QueryParams.DEFAULT).build());
+		                                             .setQueryParams(QueryParams.DEFAULT).build());
 	}
 
 	public List<Event> getEvents() {
@@ -105,7 +103,7 @@ public class EventService {
 			eventTimeout = this.properties.getEventTimeout();
 		}
 		Response<List<Event>> watch = this.consul.eventList(EventListRequest.newBuilder()
-				.setQueryParams(new QueryParams(eventTimeout, index)).build());
+		                                                                    .setQueryParams(new QueryParams(eventTimeout, index)).build());
 		return filterEvents(readEvents(watch), lastIndex);
 	}
 
@@ -116,7 +114,8 @@ public class EventService {
 
 	/**
 	 * from https://github.com/hashicorp/consul/blob/master/watch/funcs.go#L169-L194 .
-	 * @param toFilter events to filter
+	 *
+	 * @param toFilter  events to filter
 	 * @param lastIndex last index to pick from the list of events
 	 * @return filtered list of events
 	 */

@@ -17,7 +17,6 @@
 package org.springframework.cloud.consul.discovery;
 
 import com.ecwid.consul.v1.ConsulClient;
-
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -53,8 +52,9 @@ public class ConsulCatalogWatchAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public ConsulCatalogWatch consulCatalogWatch(
-			ConsulDiscoveryProperties discoveryProperties, ConsulClient consulClient,
-			@Qualifier(CATALOG_WATCH_TASK_SCHEDULER_NAME) TaskScheduler taskScheduler) {
+		ConsulDiscoveryProperties discoveryProperties,
+		ConsulClient consulClient,
+		@Qualifier(CATALOG_WATCH_TASK_SCHEDULER_NAME) TaskScheduler taskScheduler) {
 		return new ConsulCatalogWatch(discoveryProperties, consulClient, taskScheduler);
 	}
 

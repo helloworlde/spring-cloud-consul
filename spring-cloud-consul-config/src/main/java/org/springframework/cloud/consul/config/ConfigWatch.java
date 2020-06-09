@@ -127,9 +127,11 @@ public class ConfigWatch implements ApplicationEventPublisherAware, SmartLifecyc
 		return this.running.get();
 	}
 
+	// Timed 是 Prometheus 的监控
 	@Timed("consul.watch-config-keys")
 	public void watchConfigKeyValues() {
 		if (this.running.get()) {
+			// 遍历所有的配置的 key
 			for (String context : this.consulIndexes.keySet()) {
 
 				// turn the context into a Consul folder path (unless our config format
@@ -138,6 +140,7 @@ public class ConfigWatch implements ApplicationEventPublisherAware, SmartLifecyc
 					context = context + "/";
 				}
 
+				// 根据配置返回的 index 判断是否发生变化
 				try {
 					Long currentIndex = this.consulIndexes.get(context);
 					if (currentIndex == null) {

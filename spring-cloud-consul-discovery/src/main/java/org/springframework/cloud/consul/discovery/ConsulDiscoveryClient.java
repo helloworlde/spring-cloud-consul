@@ -155,7 +155,8 @@ public class ConsulDiscoveryClient implements DiscoveryClient {
 
 		CatalogServicesRequest request = CatalogServicesRequest.newBuilder()
 		                                                       .setQueryParams(QueryParams.DEFAULT)
-		                                                       .setToken(this.properties.getAclToken()).build();
+		                                                       .setToken(this.properties.getAclToken())
+		                                                       .build();
 		return new ArrayList<>(this.client.getCatalogServices(request).getValue().keySet());
 	}
 
